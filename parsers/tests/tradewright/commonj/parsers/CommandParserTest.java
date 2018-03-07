@@ -39,6 +39,8 @@ public class CommandParserTest {
     private final String COMMAND3 = "arg1, arg2, a:1st, b:2nd, arg3, c:3rd";
     private final String COMMAND4 = "name=Jane Doe ,  age=41,   address=\"123 Railway Cuttings, Camberwick Green\"";
 
+    private final String[] ARGS1 = {"arg1", "arg2", "/loglevel:H", "arg3a arg3b arg3c", "/B:", "/C:\"Wiggly woo\"", "/D:D:\"\\My Folder\""};
+
     private final char ARGUMENT_SEPARATOR_SPACE = ' ';
     private final char ARGUMENT_SEPARATOR_COMMA = ',';
     private final char SWITCH_PREFIX_HYPHEN = '-';
@@ -74,7 +76,7 @@ public class CommandParserTest {
                 .setCaseSensitive(true)
                 .build();
         String expResult = "arg1";
-        String result = instance.getArg(index);
+        String result = instance.getArgument(index);
         assertEquals(expResult, result);
     }
 
@@ -87,7 +89,7 @@ public class CommandParserTest {
                 .setCaseSensitive(true)
                 .build();
         String expResult = "arg2";
-        String result = instance.getArg(index);
+        String result = instance.getArgument(index);
         assertEquals(expResult, result);
     }
 
@@ -100,7 +102,7 @@ public class CommandParserTest {
                 .setCaseSensitive(true)
                 .build();
         String expResult = "arg3a arg3b arg3c";
-        String result = instance.getArg(index);
+        String result = instance.getArgument(index);
         assertEquals(expResult, result);
     }
 
@@ -115,7 +117,7 @@ public class CommandParserTest {
         expResult.add("arg1");
         expResult.add("arg2");
         expResult.add("arg3a arg3b arg3c");
-        ArrayList<String> result = instance.getArgs();
+        ArrayList<String> result = instance.getArguments();
         assertEquals(expResult, result);
     }
 
@@ -127,7 +129,7 @@ public class CommandParserTest {
                 .setCaseSensitive(true)
                 .build();
         int expResult = 3;
-        int result = instance.getNumberOfArgs();
+        int result = instance.getNumberOfArguments();
         assertEquals(expResult, result);
     }
 
@@ -287,7 +289,7 @@ public class CommandParserTest {
                 .setCaseSensitive(true)
                 .build();
         int expResult = 6;
-        int result = instance.getNumberOfArgs();
+        int result = instance.getNumberOfArguments();
         assertEquals(expResult, result);
     }
 
@@ -315,7 +317,7 @@ public class CommandParserTest {
                 .setCaseSensitive(true)
                 .build();
         int expResult = 3;
-        int result = instance.getNumberOfArgs();
+        int result = instance.getNumberOfArguments();
         assertEquals(expResult, result);
     }
 
@@ -362,7 +364,7 @@ public class CommandParserTest {
                 .setCaseSensitive(true)
                 .build();
         int expResult = 0;
-        int result = instance.getNumberOfArgs();
+        int result = instance.getNumberOfArguments();
         assertEquals(expResult, result);
     }
 
@@ -397,4 +399,219 @@ public class CommandParserTest {
         assertEquals(expResult, result);
     }
 
+    /*
+     * Tests using ARGS1 ------------------------------------------------------------------------------------------------
+    */
+
+    @Test
+    public void testGetArg5_1() {
+        System.out.println("getArg5_1");
+        int index = 0;
+        CommandParser instance = CommandParser.getBuilder(ARGS1)
+                .setSwitchPrefix(SWITCH_PREFIX_SLASH)
+                .setCaseSensitive(true)
+                .build();
+        String expResult = "arg1";
+        String result = instance.getArgument(index);
+        assertEquals(expResult, result);
+    }
+
+    @Test
+    public void testGetArg5_2() {
+        System.out.println("getArg5_2");
+        int index = 1;
+        CommandParser instance = CommandParser.getBuilder(ARGS1)
+                .setSwitchPrefix(SWITCH_PREFIX_SLASH)
+                .setCaseSensitive(true)
+                .build();
+        String expResult = "arg2";
+        String result = instance.getArgument(index);
+        assertEquals(expResult, result);
+    }
+
+    @Test
+    public void testGetArg5_3() {
+        System.out.println("getArg5_3");
+        int index = 2;
+        CommandParser instance = CommandParser.getBuilder(ARGS1)
+                .setSwitchPrefix(SWITCH_PREFIX_SLASH)
+                .setCaseSensitive(true)
+                .build();
+        String expResult = "arg3a arg3b arg3c";
+        String result = instance.getArgument(index);
+        assertEquals(expResult, result);
+    }
+
+    @Test
+    public void testGetArgs5() {
+        System.out.println("getArgs5");
+        CommandParser instance = CommandParser.getBuilder(ARGS1)
+                .setSwitchPrefix(SWITCH_PREFIX_SLASH)
+                .setCaseSensitive(true)
+                .build();
+        ArrayList<String> expResult = new ArrayList<>();
+        expResult.add("arg1");
+        expResult.add("arg2");
+        expResult.add("arg3a arg3b arg3c");
+        ArrayList<String> result = instance.getArguments();
+        assertEquals(expResult, result);
+    }
+
+    @Test
+    public void testGetNumberOfArgs5() {
+        System.out.println("getNumberOfArgs5");
+        CommandParser instance = CommandParser.getBuilder(ARGS1)
+                .setSwitchPrefix(SWITCH_PREFIX_SLASH)
+                .setCaseSensitive(true)
+                .build();
+        int expResult = 3;
+        int result = instance.getNumberOfArguments();
+        assertEquals(expResult, result);
+    }
+
+    @Test
+    public void testGetNumberOfSwitches5() {
+        System.out.println("getNumberOfSwitches5");
+        CommandParser instance = CommandParser.getBuilder(ARGS1)
+                .setSwitchPrefix(SWITCH_PREFIX_SLASH)
+                .setCaseSensitive(true)
+                .build();
+        int expResult = 4;
+        int result = instance.getNumberOfSwitches();
+        assertEquals(expResult, result);
+    }
+
+    @Test
+    public void testIsSwitchSet5_1() {
+        System.out.println("isSwitchSet5_1");
+        String name = "loglevel";
+        CommandParser instance = CommandParser.getBuilder(ARGS1)
+                .setSwitchPrefix(SWITCH_PREFIX_SLASH)
+                .setCaseSensitive(true)
+                .build();
+        boolean expResult = true;
+        boolean result = instance.isSwitchSet(name);
+        assertEquals(expResult, result);
+    }
+
+    @Test
+    public void testIsSwitchSet5_2() {
+        System.out.println("isSwitchSet5_2");
+        String name = "B";
+        CommandParser instance = CommandParser.getBuilder(ARGS1)
+                .setSwitchPrefix(SWITCH_PREFIX_SLASH)
+                .setCaseSensitive(true)
+                .build();
+        boolean expResult = true;
+        boolean result = instance.isSwitchSet(name);
+        assertEquals(expResult, result);
+    }
+
+    @Test
+    public void testIsSwitchSet5_3() {
+        System.out.println("isSwitchSet5_3");
+        String name = "C";
+        CommandParser instance = CommandParser.getBuilder(ARGS1)
+                .setSwitchPrefix(SWITCH_PREFIX_SLASH)
+                .setCaseSensitive(true)
+                .build();
+        boolean expResult = true;
+        boolean result = instance.isSwitchSet(name);
+        assertEquals(expResult, result);
+    }
+
+    @Test
+    public void testGetSwitches5() {
+        System.out.println("getSwitches5");
+        CommandParser instance = CommandParser.getBuilder(ARGS1)
+                .setSwitchPrefix(SWITCH_PREFIX_SLASH)
+                .setCaseSensitive(true)
+                .build();
+        ArrayList<CommandParser.SwitchEntry> expResult = new ArrayList<>();
+        expResult.add(new CommandParser.SwitchEntry("loglevel:H", String.valueOf(VALUE_SEPARATOR_COLON)));
+        expResult.add(new CommandParser.SwitchEntry("B", String.valueOf(VALUE_SEPARATOR_COLON)));
+        expResult.add(new CommandParser.SwitchEntry("C:\"Wiggly woo\"", String.valueOf(VALUE_SEPARATOR_COLON)));
+        expResult.add(new CommandParser.SwitchEntry("D:D:\"\\My Folder\"", String.valueOf(VALUE_SEPARATOR_COLON)));
+        ArrayList<CommandParser.SwitchEntry> result = instance.getSwitches();
+        assertEquals(expResult, result);
+    }
+
+    @Test
+    public void testGetSwitchIndex5_1() {
+        System.out.println("getSwitchIndex5_1");
+        String name = "loglevel";
+        CommandParser instance = CommandParser.getBuilder(ARGS1)
+                .setSwitchPrefix(SWITCH_PREFIX_SLASH)
+                .setCaseSensitive(true)
+                .build();
+        int expResult = 0;
+        int result = instance.getSwitchIndex(name);
+        assertEquals(expResult, result);
+    }
+
+    @Test
+    public void testGetSwitchIndex5_2() {
+        System.out.println("getSwitchIndex5_2");
+        String name = "B";
+        CommandParser instance = CommandParser.getBuilder(ARGS1)
+                .setSwitchPrefix(SWITCH_PREFIX_SLASH)
+                .setCaseSensitive(true)
+                .build();
+        int expResult = 1;
+        int result = instance.getSwitchIndex(name);
+        assertEquals(expResult, result);
+    }
+
+    @Test
+    public void testGetSwitchIndex5_3() {
+        System.out.println("getSwitchIndex5_3");
+        String name = "C";
+        CommandParser instance = CommandParser.getBuilder(ARGS1)
+                .setSwitchPrefix(SWITCH_PREFIX_SLASH)
+                .setCaseSensitive(true)
+                .build();
+        int expResult = 2;
+        int result = instance.getSwitchIndex(name);
+        assertEquals(expResult, result);
+    }
+
+    @Test
+    public void testGetSwitchValue5_1() {
+        System.out.println("getSwitchValue5_1");
+        String name = "loglevel";
+        CommandParser instance = CommandParser.getBuilder(ARGS1)
+                .setSwitchPrefix(SWITCH_PREFIX_SLASH)
+                .setCaseSensitive(true)
+                .build();
+        String expResult = "H";
+        String result = instance.getSwitchValue(name);
+        assertEquals(expResult, result);
+    }
+    
+    @Test
+    public void testGetSwitchValue5_2() {
+        System.out.println("getSwitchValue5_2");
+        String name = "B";
+        CommandParser instance = CommandParser.getBuilder(ARGS1)
+                .setSwitchPrefix(SWITCH_PREFIX_SLASH)
+                .setCaseSensitive(true)
+                .build();
+        String expResult = "";
+        String result = instance.getSwitchValue(name);
+        assertEquals(expResult, result);
+    }
+    
+    @Test
+    public void testGetSwitchValue5_3() {
+        System.out.println("getSwitchValue5_3");
+        String name = "C";
+        CommandParser instance = CommandParser.getBuilder(ARGS1)
+                .setSwitchPrefix(SWITCH_PREFIX_SLASH)
+                .setCaseSensitive(true)
+                .build();
+        String expResult = "Wiggly woo";
+        String result = instance.getSwitchValue(name);
+        assertEquals(expResult, result);
+    }
+    
 }

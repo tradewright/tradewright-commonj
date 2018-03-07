@@ -32,8 +32,13 @@ import java.util.Objects;
 /**
 * <p>
 * Provides facilities to determine the number and values of text elements in a 
-* string. The elements are interpreted either as arguments (which have 
-* positional significance) or switches (which have an explicit identifier).
+* specified string. The elements are interpreted either as arguments (which 
+* have positional significance) or switches (which have an explicit identifier).
+* </p>
+* <p>
+* Alternatively an array of strings may be supplied: typically this will be the
+* arguments passed to an application's <code>main</code>function, but there are many 
+* other uses.
 * </p>
 * <p>
 * To create an instance of the <code>CommandParser</code> class, use the 
@@ -43,12 +48,6 @@ import java.util.Objects;
 * finally use the <code>Builder</code> object's <code>build</code> method to create the 
 * <code>CommandParser</code> object.
 * </p>
-* 
-* <p>
-* Typically the supplied string is the arguments part of
-* the command used to start an application, but there are many other uses.
-* </p>
-* 
 * <p>
 * The format of the string passed to the constructor is as follows:
 </p>
@@ -145,12 +144,11 @@ import java.util.Objects;
 */
 public final class CommandParser {
 
-    private final ArrayList<String> mArgs = new ArrayList<>();
+    private final ArrayList<String> mParsedArguments = new ArrayList<>();
     private final ArrayList<SwitchEntry> mSwitches = new ArrayList<>();
     private final String mArgSep;
     private final String mValueSep;
     private final String mSwitchPrefix;
-    private final String mInputString;
     private final boolean mCaseSensitive;
     
     private boolean mTreatRemainingArgsAsArgs;
@@ -177,24 +175,35 @@ public final class CommandParser {
      * Specifies whether option names are case-sensitive.
      */
     private CommandParser(Builder builder) {
-        mInputString = builder.mInputString.trim();
-        mArgSep = String.valueOf(builder.mArgumentSeparatorChar);
-        mSwitchPrefix = builder.mSwitchPrefixChar == 0 ? "" : String.valueOf(builder.mSwitchPrefixChar);
-        mValueSep = String.valueOf(builder.mValueSeparatorChar);
-        mCaseSensitive = builder.mCaseSensitive;
-        getAllArgs();
+        mArgSep = builder.getArgumentSeparator();
+        mSwitchPrefix = builder.getSwitchPrefix();
+        mValueSep = builder.getValueSeparator();
+        mCaseSensitive = builder.isCaseSensitive();
+        getAllArgs(builder.getInputArgs());
     }
     
     /**
      * Returns an instance of the <code>Builder</code> class that is used to 
      * construct a <code>CommandParser</code> instance.
      * @param inputString
-     * A <code>Builder</code> instance.
+     * The string to be parsed.
      * @return 
      * An instance of the <code>Builder</code> class.
      */    
     public static Builder getBuilder(String inputString) {
         return new Builder(inputString);
+    }
+
+    /**
+     * Returns an instance of the <code>Builder</code> class that is used to 
+     * construct a <code>CommandParser</code> instance.
+     * @param inputArgs
+     * The arguments to be parsed.
+     * @return 
+     * An instance of the <code>Builder</code> class.
+     */    
+    public static Builder getBuilder(String[] inputArgs) {
+        return new Builder(inputArgs);
     }
 
     /**
@@ -204,20 +213,20 @@ public final class CommandParser {
      * @return 
      * The requested argument.
      */
-    public String getArg(int index) {
-        if (index < 0 || index >= mArgs.size()) {
+    public String getArgument(int index) {
+        if (index < 0 || index >= mParsedArguments.size()) {
             throw new IllegalArgumentException("index out of range");
         }
-        return mArgs.get(index);
+        return mParsedArguments.get(index);
     }
 
     /**
-     * Gets a List&lt;String&gt; containing all the arguments.
+     * Gets a List&lt;String&gt; containing all the parsed arguments.
      * @return 
      * A List&lt;String&gt; containing the arguments.
      */
-    public ArrayList<String> getArgs() {
-        return mArgs;
+    public ArrayList<String> getArguments() {
+        return mParsedArguments;
     }
 
     /**
@@ -225,8 +234,8 @@ public final class CommandParser {
     * @return
     * The number of arguments.
     */
-    public int getNumberOfArgs() {
-        return mArgs.size();
+    public int getNumberOfArguments() {
+        return mParsedArguments.size();
     }
 
     /**
@@ -294,7 +303,7 @@ public final class CommandParser {
         }
         
         if (mTreatRemainingArgsAsArgs) {
-            mArgs.add(trimQuotes(value));
+            mParsedArguments.add(trimQuotes(value));
         } else if ("".equals(mSwitchPrefix) &&
                 value.length() > 2 && 
                 Character.isLetterOrDigit(value.charAt(0)) &&
@@ -305,7 +314,7 @@ public final class CommandParser {
                 value.length() > 1) {
             mSwitches.add(new SwitchEntry(value.substring(1), mValueSep));
         } else {
-            mArgs.add(trimQuotes(value));
+            mParsedArguments.add(trimQuotes(value));
         }
     }
 
@@ -333,13 +342,13 @@ public final class CommandParser {
         return -1;
     }
 
-    private void getAllArgs() {
-        if ("".equals(mInputString)) {
+    private void getAllArgs(String[] inputArgs) {
+        if (inputArgs == null) {
             return;
         }
         String partialArg = "";
         
-        for (String argument : mInputString.split(mArgSep)){
+        for (String argument : inputArgs) {
             if ("".equals(argument) && "".equals(partialArg) && " ".equals(mArgSep)) {
                 //discard spaces when the separator is a space and we don't have unbalanced quotes
             } else {
@@ -458,8 +467,9 @@ public final class CommandParser {
      */
     public static class Builder {
         
-        private final String mInputString;
+        private String[] mInputArgs;
 
+        private String mInputString;
         private char mArgumentSeparatorChar = ' ';
         private char mSwitchPrefixChar = '-';
         private char mValueSeparatorChar = ':';
@@ -467,6 +477,11 @@ public final class CommandParser {
 
         Builder(String inputString) {
             mInputString = inputString;
+            if (mInputString != null) mInputArgs = mInputString.split(String.valueOf(mArgumentSeparatorChar));
+        }
+
+        Builder(String[] args) {
+            mInputArgs = args;
         }
 
         /**
@@ -476,9 +491,9 @@ public final class CommandParser {
          * An instance of <code>CommandParser</code>.
          */
         public CommandParser build() {
-        if (mArgumentSeparatorChar == mSwitchPrefixChar || 
+            if (mArgumentSeparatorChar == mSwitchPrefixChar || 
                 mArgumentSeparatorChar == mValueSeparatorChar || 
-                mSwitchPrefixChar == mValueSeparatorChar)  throw new IllegalArgumentException("argumentSeparator, switchPrefix and valueSeparator must all be different");
+                mSwitchPrefixChar == mValueSeparatorChar) throw new IllegalArgumentException("argumentSeparator, switchPrefix and valueSeparator must all be different");
             return new CommandParser(this);
         }
 
@@ -496,6 +511,7 @@ public final class CommandParser {
         public Builder setArgumentSeparator(char argumentSeparator) {
             if (!isPrintableAscii(argumentSeparator)) throw new IllegalArgumentException("argumentSeparator must be printable char");
             mArgumentSeparatorChar = argumentSeparator;
+            if (mInputString != null) mInputArgs = mInputString.split(String.valueOf(mArgumentSeparatorChar));
             return this;
         }
 
@@ -546,6 +562,41 @@ public final class CommandParser {
             if (!isPrintableAscii(valueSeparator)) throw new IllegalArgumentException("valueSeparator must be printable char");
             mValueSeparatorChar = valueSeparator;
             return this;
+        }
+
+        /**
+         * @return the mParsedArguments
+         */
+        String[] getInputArgs() {
+            return mInputArgs;
+        }
+
+        /**
+         * @return the mArgumentSeparatorChar
+         */
+        String getArgumentSeparator() {
+            return String.valueOf(mArgumentSeparatorChar);
+        }
+
+        /**
+         * @return the mSwitchPrefixChar
+         */
+        String getSwitchPrefix() {
+            return mSwitchPrefixChar == 0 ? "" : String.valueOf(mSwitchPrefixChar);
+        }
+
+        /**
+         * @return the mValueSeparatorChar
+         */
+        String getValueSeparator() {
+            return String.valueOf(mValueSeparatorChar);
+        }
+
+        /**
+         * @return the mCaseSensitive
+         */
+        boolean isCaseSensitive() {
+            return mCaseSensitive;
         }
 
     }
